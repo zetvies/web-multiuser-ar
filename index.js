@@ -72,6 +72,11 @@ io.sockets.on("connection", function (socket) {
     buildingState[data.land] = data.data;
     io.emit("buildingState", buildingState);
   });
+  
+  socket.on("actionDestroy", function (data) {
+    buildingState[data.land] = data.data;
+    io.emit("buildingState", buildingState);
+  });
 
   socket.on("init", function (data) {
     // console.log(`socket.init ${data.model}`);
@@ -132,5 +137,5 @@ setInterval(function () {
     }
   });
 
-  if (pack.length > 1) io.emit("remoteData", pack);
+  if (pack.length > 0) io.emit("remoteData", pack);
 }, 40);

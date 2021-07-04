@@ -129,7 +129,7 @@
         socket.on('userList', function (data) {
           userList = data
           createCharacters()
-          // console.log(characterList)
+          console.log(characterList)
         })
       });
 
@@ -214,41 +214,43 @@
       }
 
       function createCharacters() {
+        if (userList) {
+          while (characters.children.length > 0) {
+            characters.remove(characters.children[0]);
+          }
+          characterList=[]
 
-        while (characters.children.length > 0) {
-          characters.remove(interactables.children[0]);
-        }
+          let floader = new THREE.FBXLoader();
+          let loader = new THREE.TextureLoader();
+          userList.forEach((user) => {
+            if (user.id != id) {
 
-        let floader = new THREE.FBXLoader();
-        let loader = new THREE.TextureLoader();
-        userList.forEach((user) => {
-          if (user.id != id) {
+              floader.load(`assets/fbx/people/${user.model}.fbx`, function (object) {
+                object.scale.multiplyScalar(0.001)
 
-            floader.load(`assets/fbx/people/${user.model}.fbx`, function (object) {
-              object.scale.multiplyScalar(0.001)
+                object.name = user.name;
 
-              object.name = user.name;
-
-              object.traverse(function (child) {
-                if (child.isMesh) {
-                  child.castShadow = true;
-                  child.receiveShadow = false;
-                }
-              });
-
-              loader.load(`assets/images/SimplePeople_${user.model}_${user.colour}.png`, function (texture) {
                 object.traverse(function (child) {
                   if (child.isMesh) {
-                    child.material.map = texture;
+                    child.castShadow = true;
+                    child.receiveShadow = false;
                   }
                 });
-              });
 
-              characters.add(object);
-              characterList.push({ id: user.id, object: object })
-            });
-          }
-        })
+                loader.load(`assets/images/SimplePeople_${user.model}_${user.colour}.png`, function (texture) {
+                  object.traverse(function (child) {
+                    if (child.isMesh) {
+                      child.material.map = texture;
+                    }
+                  });
+                });
+
+                characters.add(object);
+                characterList.push({ id: user.id, object: object })
+              });
+            }
+          })
+        }
       }
 
       function initialize() {
@@ -896,7 +898,8 @@
 
       function actionDestroy() {
         resetButton()
-        
+
+        socket.emit('actionDestroy', { land: landTemp, data: { vacant: true, building: null, owner: "" } })
         buildingState[landTemp] = { vacant: true, building: null, owner: "" }
         modal = false
         buildingTemp = null
