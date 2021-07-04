@@ -1,21 +1,20 @@
-var path = require('path');
-var express = require('express');
+var path = require("path");
+var express = require("express");
 var app = express();
 
-const http = require('http');
+const http = require("http");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
-let PORT=process.env.PORT||3000;
+let PORT = process.env.PORT || 3000;
 
-var htmlPath = path.join(__dirname, 'html');
+var htmlPath = path.join(__dirname, "html");
 app.use(express.static(htmlPath));
 
-server.listen(PORT,()=>{
-    console.log(`listening on port ${PORT}`)
-})
-
+server.listen(PORT, () => {
+  console.log(`listening on port ${PORT}`);
+});
 
 let userList = [];
 let buildingState = {
@@ -64,7 +63,7 @@ io.sockets.on("connection", function (socket) {
       id: socket.id,
       username: socket.username,
     };
-    
+
     socket.emit("acceptJoin", userInfo);
   });
 
@@ -72,7 +71,7 @@ io.sockets.on("connection", function (socket) {
     buildingState[data.land] = data.data;
     io.emit("buildingState", buildingState);
   });
-  
+
   socket.on("actionDestroy", function (data) {
     buildingState[data.land] = data.data;
     io.emit("buildingState", buildingState);
@@ -113,8 +112,17 @@ io.sockets.on("connection", function (socket) {
     var removeIndex = userList.map((item) => item.id).indexOf(socket.id);
     ~removeIndex && userList.splice(removeIndex, 1);
 
+    let lands = ["A", "B", "C", "D", "E", "F"];
+
+    lands.forEach((land) => {
+      if (buildingState[land].owner == socket.username) {
+        buildingState[land] = { vacant: true, building: null, owner: "" };
+      }
+    });
+
     io.emit("userList", userList);
     io.emit("online", userList.length);
+    io.emit("buildingState", buildingState);
   });
 });
 
