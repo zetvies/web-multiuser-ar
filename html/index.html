@@ -1,11 +1,1102 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Socket.IO rooms</title>
-  </head>
-  <body>
-	<h1>
-		Hello World
-	</h1>>
-  </body>
+<!DOCTYPE html>
+
+<head>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>Hello, world!</title>
+  <!-- include CSS -->
+  <link href="index.css" rel="stylesheet" type="text/css" />
+  <!-- include three.js library -->
+  <script src='libs/three.min.js'></script>
+  <!-- include jsartookit -->
+  <script src="jsartoolkit5/artoolkit.min.js"></script>
+  <script src="jsartoolkit5/artoolkit.api.js"></script>
+  <!-- include threex.artoolkit -->
+  <script src="threex/threex-artoolkitsource.js"></script>
+  <script src="threex/threex-artoolkitcontext.js"></script>
+  <script src="threex/threex-arbasecontrols.js"></script>
+  <script src="threex/threex-armarkercontrols.js"></script>
+  <!-- socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- include other scripts -->
+  <script src="libs/inflate.min.js"></script>
+  <script src="libs/FBXLoader.js"></script>
+  <script src="libs/OrbitControls.js"></script>
+  <script src="libs/Detector.js"></script>
+  <script src="libs/joy.js"></script>
+  <script src="libs/jquery-3.6.0.min.js"></script>
+</head>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+
+  <!-- 
+  Example created by Lee Stemkoski: https://github.com/stemkoski
+  Based on the AR.js library and examples created by Jerome Etienne: https://github.com/jeromeetienne/AR.js/
+-->
+
+  <div id="joyDiv" onmousedown="joystickStart()" ontouchstart="joystickStart()"
+    style="width:100px;height:100px;bottom:10px;left:50%;margin-left:-50px;position:absolute;z-index: 10;"></div>
+  <div id="container">
+    <div id="home">
+      <div>
+        <h2>
+          Please insert your name.
+        </h2>
+
+        <form action="">
+          <input id="username" />
+          <button>
+            <h3>
+              Join Room
+            </h3>
+          </button>
+        </form>
+
+
+        <h3>
+          There is <span id="onlineUser"></span> user in the room.
+        </h3>
+      </div>
+
+    </div>
+    <script>
+      const socket = io();
+      // let online;
+      let username, id
+      let buildingState = {
+        A: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+        B: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+        C: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+        D: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+        E: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+        F: {
+          vacant: true,
+          building: null,
+          owner: "",
+        },
+      };
+
+      let userList = []
+      let characterList = []
+      let remoteData
+
+      $(function () {
+        $('form').submit((e) => {
+          e.preventDefault();//prevents page reloading
+          socket.emit("requestJoin", $('#username').val());
+          return null;
+        });
+
+        socket.on('online', function (data) {
+          $('#onlineUser').text(data)
+        })
+
+        socket.on('acceptJoin', function (data) {
+          username = data.username;
+          id = data.id;
+          $('#home').hide()
+          initSocket()
+        })
+
+        socket.on('remoteData', function (data) {
+          remoteData = data;
+          console.log(remoteData)
+        });
+
+        socket.on('buildingState', function (data) {
+          buildingState = data
+        })
+
+        socket.on('userList', function (data) {
+          userList = data
+          createCharacters()
+          // console.log(characterList)
+        })
+      });
+
+      var scene, camera, renderer, clock, deltaTime, totalTime;
+
+      var arToolkitSource, arToolkitContext;
+
+      var environment, interactables, characters;
+
+      var raycastObjects = []
+
+      var AF, BF, CF, DF, EF, FF, AB, BB, CB, DB, EB, FB;
+      var HotdogBuilding, DonutBuilding, IceCreamBuilding, ShortBuilding, TallBuilding;
+      let Player = {}
+      let joystick, isJoystickUsed
+
+      let modal = false;
+      let buildingTemp;
+      let landTemp = 'A'
+
+      let playerList = {
+        "Bimo Arsa": {
+        }
+      }
+
+      let model, colour;
+      let raycaster = new THREE.Raycaster();
+      let mouse = new THREE.Vector2();
+
+      initialize();
+      animate();
+
+
+      // Create JoyStick object into the DIV 'joyDiv'
+      var joy = new JoyStick('joyDiv');
+
+      let turn, forward, radius, rotation
+      function joystickStart() {
+        isJoystickUsed = true
+      }
+
+      function joystickStop() {
+        isJoystickUsed = false
+        Player.forward = 0
+      }
+
+      function updateRemotePlayer() {
+        if (remoteData) {
+          remoteData.forEach(data => {
+            let characterTemp = characterList.find(x => x.id === data.id)
+            if (characterTemp) {
+
+              characterTemp.object.position.set(data.x, data.y, data.z);
+              const euler = new THREE.Euler(data.pb, data.heading, data.pb);
+              characterTemp.object.quaternion.setFromEuler(euler);
+            }
+          })
+        }
+      }
+
+      function movePlayer(dt) {
+        if (Player.forward > 0.3) {
+          Player.object.translateZ(dt * 0.4);
+        }
+
+        if (isJoystickUsed) {
+          if (Player.object.position.x > 0.65 / 2) {
+            Player.object.position.x = 0.65 / 2
+          }
+          if (Player.object.position.x < -0.65 / 2) {
+            Player.object.position.x = -0.65 / 2
+          }
+          if (Player.object.position.z > 2.4 / 2) {
+            Player.object.position.z = 2.4 / 2
+          }
+          if (Player.object.position.z < -2.4 / 2) {
+            Player.object.position.z = -2.4 / 2
+          }
+        }
+
+        updateSocket()
+      }
+
+      function createCharacters() {
+
+        while (characters.children.length > 0) {
+          characters.remove(interactables.children[0]);
+        }
+
+        let floader = new THREE.FBXLoader();
+        let loader = new THREE.TextureLoader();
+        userList.forEach((user) => {
+          if (user.id != id) {
+
+            floader.load(`assets/fbx/people/${user.model}.fbx`, function (object) {
+              object.scale.multiplyScalar(0.001)
+
+              object.name = user.name;
+
+              object.traverse(function (child) {
+                if (child.isMesh) {
+                  child.castShadow = true;
+                  child.receiveShadow = false;
+                }
+              });
+
+              loader.load(`assets/images/SimplePeople_${user.model}_${user.colour}.png`, function (texture) {
+                object.traverse(function (child) {
+                  if (child.isMesh) {
+                    child.material.map = texture;
+                  }
+                });
+              });
+
+              characters.add(object);
+              characterList.push({ id: user.id, object: object })
+            });
+          }
+        })
+      }
+
+      function initialize() {
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
+        // camera.rotation.y=Math.PI/2
+        scene.add(camera);
+
+        renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true
+        });
+        renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position = 'absolute'
+        renderer.domElement.style.top = '0px'
+        renderer.domElement.style.left = '0px'
+        document.body.appendChild(renderer.domElement);
+
+        clock = new THREE.Clock();
+        deltaTime = 0;
+        totalTime = 0;
+
+        ////////////////////////////////////////////////////////////
+        // setup arToolkitSource
+        ////////////////////////////////////////////////////////////
+
+        arToolkitSource = new THREEx.ArToolkitSource({
+          sourceType: 'webcam',
+        });
+
+        function onResize() {
+          arToolkitSource.onResizeElement()
+          arToolkitSource.copyElementSizeTo(renderer.domElement)
+          if (arToolkitContext.arController !== null) {
+            arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+          }
+        }
+
+        arToolkitSource.init(function onReady() {
+          onResize()
+        });
+
+        // handle resize event
+        window.addEventListener('resize', function () {
+          onResize()
+        });
+
+        ////////////////////////////////////////////////////////////
+        // setup arToolkitContext
+        ////////////////////////////////////////////////////////////	
+
+        // create atToolkitContext
+        arToolkitContext = new THREEx.ArToolkitContext({
+          cameraParametersUrl: 'data/camera_para.dat',
+          detectionMode: 'mono'
+        });
+
+        // copy projection matrix to camera when initialization complete
+        arToolkitContext.init(function onCompleted() {
+          camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+        });
+
+        ////////////////////////////////////////////////////////////
+        // setup markerRoots
+        ////////////////////////////////////////////////////////////
+
+        // build markerControls
+        environment = new THREE.Group();
+        scene.add(environment);
+        let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, environment, {
+          type: 'pattern', patternUrl: "data/kanji.patt",
+        })
+
+        ////////////////////////////////////////////////////////////
+        // setup scene
+        ////////////////////////////////////////////////////////////
+
+        // joystick = new JoyStick({
+        //   onMove: playerControl
+        // });
+
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        interactables = new THREE.Group();
+        environment.add(interactables);
+        characters = new THREE.Group();
+        environment.add(characters);
+
+        let floader = new THREE.FBXLoader();
+        let loader = new THREE.TextureLoader();
+
+        floader.load('assets/fbx/HotdogBuilding.fbx', function (object) {
+          object.scale.multiplyScalar(0.00028);
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+          HotdogBuilding = object
+        }, undefined, function (e) {
+          console.error(e);
+        });
+
+        floader.load('assets/fbx/DonutBuilding.fbx', function (object) {
+          object.scale.multiplyScalar(0.00028);
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+          DonutBuilding = object
+        }, undefined, function (e) {
+          console.error(e);
+        });
+
+        floader.load('assets/fbx/IceCreamBuilding.fbx', function (object) {
+          object.scale.multiplyScalar(0.00028);
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+          IceCreamBuilding = object
+        }, undefined, function (e) {
+          console.error(e);
+        });
+
+        floader.load('assets/fbx/ShortBuilding.fbx', function (object) {
+          object.scale.multiplyScalar(0.00028);
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+          ShortBuilding = object
+        }, undefined, function (e) {
+          console.error(e);
+        });
+
+        floader.load('assets/fbx/TallBuilding.fbx', function (object) {
+          object.scale.multiplyScalar(0.00028);
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+          TallBuilding = object
+        }, undefined, function (e) {
+          console.error(e);
+        });
+
+        const people = ['BeachBabe', 'BusinessMan', 'Doctor', 'FireFighter', 'Housewife', 'Policeman', 'Prostitute', 'Punk', 'RiotCop', 'Roadworker', 'Robber', 'Sheriff', 'Streetman', 'Waitress'];
+        model = people[Math.floor(Math.random() * people.length)];
+
+        floader.load(`assets/fbx/people/${model}.fbx`, function (object) {
+          object.scale.multiplyScalar(0.001)
+
+          object.name = id;
+
+          object.traverse(function (child) {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = false;
+            }
+          });
+
+          const name = model;//object.children[game.player.index].name.substring(3);
+          const colours = ['Black', 'Brown', 'White'];
+          colour = colours[Math.floor(Math.random() * colours.length)];
+
+          loader.load(`assets/images/SimplePeople_${name}_${colour}.png`, function (texture) {
+            object.traverse(function (child) {
+              if (child.isMesh) {
+                child.material.map = texture;
+              }
+            });
+          });
+
+          environment.add(object);
+          Player.object = object;
+        });
+
+
+        AF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        BF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        CF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        DF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        EF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+        FF = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.1, 0.75), new THREE.MeshStandardMaterial({ color: 0x808080 }));
+
+        AF.name = "AF"
+        BF.name = "BF"
+        CF.name = "CF"
+        DF.name = "DF"
+        EF.name = "EF"
+        FF.name = "FF"
+
+        AF.position.set(-0.7, 0.05, 0.8)
+        BF.position.set(-0.7, 0.05, 0)
+        CF.position.set(-0.7, 0.05, -0.8)
+        DF.position.set(0.7, 0.05, -0.8)
+        EF.position.set(0.7, 0.05, 0)
+        FF.position.set(0.7, 0.05, 0.8)
+
+        let floorGeometry = new THREE.PlaneGeometry(2.25, 2.4);
+        let texture = loader.load("assets/images/Tiles.jpg");
+        // repeat texture
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        // texture.repeat.set(8, 1);
+        let floorMaterial = new THREE.MeshLambertMaterial({ map: texture })
+
+        floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+        floorMesh.rotation.x = -Math.PI / 2;
+        floorMesh.receiveShadow = true;
+        environment.add(floorMesh);
+
+
+        let light = new THREE.PointLight(0xffffff, 1, 50);
+        light.position.set(8, 8, 0); // default; light shining from top
+        light.castShadow = true;
+        environment.add(light);
+
+        let ambientLight = new THREE.AmbientLight(0x666666);
+        environment.add(ambientLight);
+        // let helper = new THREE.CameraHelper( camera );
+        // environment.add( helper );
+      }
+
+      function onMouseMove(event) {
+        // calculate mouse position in normalized device coordinates
+        // (-1 to +1) for both components
+
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+      }
+
+
+      function initSocket() {
+        //console.log("PlayerLocal.initSocket");
+        if (Player.object) {
+          socket.emit('init', {
+            username: username,
+            model: model,
+            colour: colour,
+            x: Player.object.position.x,
+            y: Player.object.position.y,
+            z: Player.object.position.z,
+            h: Player.object.rotation.y,
+            pb: Player.object.rotation.x,
+          });
+        }
+      }
+
+      function updateSocket() {
+        if (socket !== undefined && Player.object) {
+          //console.log(`PlayerLocal.updateSocket - rotation(${this.object.rotation.x.toFixed(1)},${this.object.rotation.y.toFixed(1)},${this.object.rotation.z.toFixed(1)})`);
+          socket.emit('update', {
+            x: Player.object.position.x,
+            y: Player.object.position.y,
+            z: Player.object.position.z,
+            h: Player.object.rotation.y,
+            pb: Player.object.rotation.x,
+          })
+          // console.log(Player.object.children)
+        }
+      }
+
+      function interact() {
+        if (id) {
+          raycaster.setFromCamera(mouse, camera);
+          const intersects = raycaster.intersectObjects(raycastObjects, true);
+          if (intersects[0]) {
+            modal = true;
+            if (intersects[0].object.name == "AF" || intersects[0].object.name == "AB") {
+              landTemp = "A"
+            }
+            else if (intersects[0].object.name == "BF" || intersects[0].object.name == "BB") {
+              landTemp = "B"
+            }
+            else if (intersects[0].object.name == "CF" || intersects[0].object.name == "CB") {
+              landTemp = "C"
+            }
+            else if (intersects[0].object.name == "DF" || intersects[0].object.name == "DB") {
+              landTemp = "D"
+            }
+            else if (intersects[0].object.name == "EF" || intersects[0].object.name == "EB") {
+              landTemp = "E"
+            }
+            else if (intersects[0].object.name == "FF" || intersects[0].object.name == "FB") {
+              landTemp = "F"
+            }
+            $(".ownedImage").hide()
+          }
+        }
+      }
+
+      function onInteraction() {
+        joystickStop()
+        interact()
+      }
+
+      window.addEventListener('mouseup', onInteraction);
+      window.addEventListener('touchend', onInteraction);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener("touchstart", function funcref(evt) {
+        window.removeEventListener("touchstart", funcref, false);
+      }, false);
+
+      function update() {
+        // update artoolkit on every frame
+        if (arToolkitSource.ready !== false)
+          arToolkitContext.update(arToolkitSource.domElement);
+
+        if (isJoystickUsed) {
+          turn = joy.GetPosY() / 50 * (joy.GetPosX() - 50) / 25;
+          forward = joy.GetPosX() / 50 * (50 - joy.GetPosY()) / 25;
+
+          if (turn > 1) {
+            turn = 1
+          }
+          if (turn < -1) {
+            turn = -1
+          }
+          if (forward > 1) {
+            forward = 1
+          }
+          if (forward < -1) {
+            forward = -1
+          }
+          radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
+          Player.forward = radius
+
+          rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
+          rotation = -rotation + Math.PI
+
+          Player.object.rotation.y = rotation
+
+          raycastObjects = []
+        }
+      }
+
+      function render() {
+        renderer.render(scene, camera);
+      }
+
+      const cloneFbx = (fbx) => {
+        const clone = fbx.clone(true)
+        clone.animations = fbx.animations
+        clone.skeleton = { bones: [] }
+
+        const skinnedMeshes = {}
+
+        fbx.traverse(node => {
+          if (node.isSkinnedMesh) {
+            skinnedMeshes[node.name] = node
+          }
+        })
+
+        const cloneBones = {}
+        const cloneSkinnedMeshes = {}
+
+        clone.traverse(node => {
+          if (node.isBone) {
+            cloneBones[node.name] = node
+          }
+
+          if (node.isSkinnedMesh) {
+            cloneSkinnedMeshes[node.name] = node
+          }
+        })
+
+        for (let name in skinnedMeshes) {
+          const skinnedMesh = skinnedMeshes[name]
+          const skeleton = skinnedMesh.skeleton
+          const cloneSkinnedMesh = cloneSkinnedMeshes[name]
+
+          const orderedCloneBones = []
+
+          for (let i = 0; i < skeleton.bones.length; i++) {
+            const cloneBone = cloneBones[skeleton.bones[i].name]
+            orderedCloneBones.push(cloneBone)
+          }
+
+          cloneSkinnedMesh.bind(
+            new THREE.Skeleton(orderedCloneBones, skeleton.boneInverses),
+            cloneSkinnedMesh.matrixWorld)
+
+          // For animation to work correctly:
+          clone.skeleton.bones.push(cloneSkinnedMesh)
+          clone.skeleton.bones.push(...orderedCloneBones)
+        }
+
+        return clone
+      }
+
+      function loadCanvas() {
+        raycastObjects = []
+
+        while (interactables.children.length > 0) {
+          interactables.remove(interactables.children[0]);
+        }
+
+        if (buildingState['A'].vacant) {
+          interactables.add(AF);
+        }
+        else {
+          if (buildingState['A'].building == 1) {
+            AB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['A'].building == 2) {
+            AB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['A'].building == 3) {
+            AB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['A'].building == 4) {
+            AB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['A'].building == 5) {
+            AB = cloneFbx(ShortBuilding)
+          }
+
+          AB.name = "AB"
+          AB.children.forEach(child => {
+            child.name = "AB"
+          })
+          AB.rotation.y = Math.PI / 2;
+          AB.position.set(-0.7, 0.05, 0.8)
+          interactables.add(AB)
+        }
+
+        if (buildingState['B'].vacant) {
+          interactables.add(BF);
+        }
+        else {
+          if (buildingState['B'].building == 1) {
+            BB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['B'].building == 2) {
+            BB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['B'].building == 3) {
+            BB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['B'].building == 4) {
+            BB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['B'].building == 5) {
+            BB = cloneFbx(ShortBuilding)
+          }
+
+          BB.name = "BB"
+          BB.children.forEach(child => {
+            child.name = "BB"
+          })
+          BB.rotation.y = Math.PI / 2;
+          BB.position.set(-0.7, 0.05, 0)
+          interactables.add(BB)
+        }
+
+        if (buildingState['C'].vacant) {
+          interactables.add(CF);
+        }
+        else {
+          if (buildingState['C'].building == 1) {
+            CB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['C'].building == 2) {
+            CB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['C'].building == 3) {
+            CB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['C'].building == 4) {
+            CB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['C'].building == 5) {
+            CB = cloneFbx(ShortBuilding)
+          }
+
+          CB.name = "CB"
+          CB.children.forEach(child => {
+            child.name = "CB"
+          })
+          CB.rotation.y = Math.PI / 2;
+          CB.position.set(-0.7, 0.05, -0.8)
+          interactables.add(CB)
+        }
+
+
+        if (buildingState['D'].vacant) {
+          interactables.add(DF);
+        }
+        else {
+          if (buildingState['D'].building == 1) {
+            DB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['D'].building == 2) {
+            DB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['D'].building == 3) {
+            DB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['D'].building == 4) {
+            DB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['D'].building == 5) {
+            DB = cloneFbx(ShortBuilding)
+          }
+
+          DB.name = "DB"
+          DB.children.forEach(child => {
+            child.name = "DB"
+          })
+          DB.rotation.y = -Math.PI / 2;
+          DB.position.set(0.7, 0.05, -0.8)
+          interactables.add(DB)
+        }
+
+
+        if (buildingState['E'].vacant) {
+          interactables.add(EF);
+        }
+        else {
+          if (buildingState['E'].building == 1) {
+            EB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['E'].building == 2) {
+            EB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['E'].building == 3) {
+            EB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['E'].building == 4) {
+            EB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['E'].building == 5) {
+            EB = cloneFbx(ShortBuilding)
+          }
+
+          EB.name = "EB"
+          EB.children.forEach(child => {
+            child.name = "EB"
+          })
+          EB.rotation.y = -Math.PI / 2;
+          EB.position.set(0.7, 0.05, 0)
+          interactables.add(EB)
+        }
+
+
+        if (buildingState['F'].vacant) {
+          interactables.add(FF);
+        }
+        else {
+          if (buildingState['F'].building == 1) {
+            FB = cloneFbx(HotdogBuilding)
+          }
+          else if (buildingState['F'].building == 2) {
+            FB = cloneFbx(DonutBuilding)
+          }
+          else if (buildingState['F'].building == 3) {
+            FB = cloneFbx(IceCreamBuilding)
+          }
+          else if (buildingState['F'].building == 4) {
+            FB = cloneFbx(TallBuilding)
+          }
+          else if (buildingState['F'].building == 5) {
+            FB = cloneFbx(ShortBuilding)
+          }
+
+          FB.name = "FB"
+          FB.children.forEach(child => {
+            child.name = "FB"
+          })
+          FB.rotation.y = -Math.PI / 2;
+          FB.position.set(0.7, 0.05, 0.8)
+          interactables.add(FB)
+        }
+
+        if (!modal) {
+          raycastObjects = interactables.children
+        }
+
+      }
+
+      function resetButton() {
+
+        $('button#1').css({ "border": "" })
+        $('button#2').css({ "border": "" })
+        $('button#3').css({ "border": "" })
+        $('button#4').css({ "border": "" })
+        $('button#5').css({ "border": "" })
+
+      }
+
+      //HTML Side
+      function selectButton(building) {
+        resetButton()
+
+        if (building == 1) {
+          $('button#1').css({ "border": "3px solid red" })
+          buildingTemp = 1;
+        }
+        if (building == 2) {
+          $('button#2').css({ "border": "3px solid red" })
+          buildingTemp = 2;
+        }
+        if (building == 3) {
+          $('button#3').css({ "border": "3px solid red" })
+          buildingTemp = 3;
+        }
+        if (building == 4) {
+          $('button#4').css({ "border": "3px solid red" })
+          buildingTemp = 4;
+        }
+        if (building == 5) {
+          $('button#5').css({ "border": "3px solid red" })
+          buildingTemp = 5;
+        }
+      }
+
+      function actionBuild() {
+        resetButton()
+
+        socket.emit('actionBuild', { land: landTemp, data: { vacant: false, building: buildingTemp, owner: username } })
+        modal = false
+        buildingTemp = null
+      }
+
+      function actionDestroy() {
+        resetButton()
+        
+        buildingState[landTemp] = { vacant: true, building: null, owner: "" }
+        modal = false
+        buildingTemp = null
+      }
+
+      function closeModal() {
+        modal = false
+        buildingTemp = null
+      }
+
+      function loadHTML() {
+        $(function () {
+          $("#modal").toggle(modal)
+          $("#vacant").toggle(buildingState[landTemp].vacant)
+          $("#owned").toggle(!buildingState[landTemp].vacant)
+          $("#actionBuild").toggle(buildingTemp != null)
+          $("#actionDestroy").toggle(buildingState[landTemp].owner == username || username == "Admin")
+
+          let identifier
+          for (let i = 1; i <= 5; i++) {
+            if (buildingState[landTemp].building == i) {
+              identifier = "#" + i + ".ownedImage"
+              $(identifier).show()
+            }
+          }
+
+          $jqLand = $('#land');
+          text = "Land " + landTemp
+          $jqLand.html(text)
+
+          if (buildingState[landTemp].vacant) {
+            $jqBuilding = $('#building');
+            text = (
+              buildingTemp == 1 ? "Hotdog Building: $200k" :
+                buildingTemp == 2 ? "Donut Building: $200k" :
+                  buildingTemp == 3 ? "Ice Cream Building: $300k" :
+                    buildingTemp == 4 ? "Tall Building: $1000k" :
+                      buildingTemp == 5 ? "Short Building: $500k" :
+                        "No Buildings Selected"
+            )
+            $jqBuilding.html(text)
+          }
+          else {
+            $jqBuilding = $('#ownedBuilding');
+            text = (
+              buildingState[landTemp].building == 1 ? "Building: Hotdog Building" :
+                buildingState[landTemp].building == 2 ? "Building: Donut Building" :
+                  buildingState[landTemp].building == 3 ? "Building: Ice Cream Building" :
+                    buildingState[landTemp].building == 4 ? "Building: Tall Building" :
+                      buildingState[landTemp].building == 5 ? "Building: Short Building" :
+                        "No Buildings Selected"
+            )
+            $jqBuilding.html(text)
+          }
+
+          $jqOwner = $('#ownerName');
+          text = "Owner: " + buildingState[landTemp].owner
+          $jqOwner.html(text)
+        })
+      }
+
+      function animate() {
+        deltaTime = clock.getDelta();
+        totalTime += deltaTime;
+
+        requestAnimationFrame(animate);
+
+        loadCanvas()
+        loadHTML()
+        // if (!isMobile()) {
+        //   resetMaterials();
+        //   hover();
+        // }
+        update();
+
+        //navigation
+        updateRemotePlayer(deltaTime)
+        movePlayer(deltaTime)
+        render();
+      }
+    </script>
+    <div id="modal">
+      <h2 id="land"></h2>
+      <div id="vacant">
+        <h3>
+          Please select a building.
+        </h3>
+        <div id="list">
+          <button class="image" id="1" onclick="selectButton(1)">
+            <img src="assets/images/Hotdog.PNG" alt="HotdogBuilding" />
+          </button>
+          <button class="image" id="2" onclick="selectButton(2)">
+            <img src="assets/images/Donut.PNG" alt="HotdogBuilding" />
+          </button>
+          <button class="image" id="3" onclick="selectButton(3)">
+            <img src="assets/images/IceCream.PNG" alt="HotdogBuilding" />
+          </button>
+          <button class="image" id="4" onclick="selectButton(4)">
+            <img src="assets/images/Tall.PNG" alt="HotdogBuilding" />
+          </button>
+          <button class="image" id="5" onclick="selectButton(5)">
+            <img src="assets/images/Short.PNG" alt="HotdogBuilding" />
+          </button>
+        </div>
+        <h3 id="building">
+        </h3>
+        <div>
+          <button id="actionBuild" onclick="actionBuild()">
+            <h3>
+              Build
+            </h3>
+          </button>
+          <button onclick="closeModal()">
+            <h3>
+              Close
+            </h3>
+          </button>
+        </div>
+      </div>
+      <div id="owned">
+        <h3>
+          This land is owned
+        </h3>
+        <button class="ownedImage" id="1">
+          <img src="assets/images/Hotdog.PNG" alt="HotdogBuilding" />
+        </button>
+        <button class="ownedImage" id="2">
+          <img src="assets/images/Donut.PNG" alt="DonutBuilding" />
+        </button>
+        <button class="ownedImage" id="3">
+          <img src="assets/images/IceCream.PNG" alt="IceCreamBuilding" />
+        </button>
+        <button class="ownedImage" id="4">
+          <img src="assets/images/Tall.PNG" alt="TallBuilding" />
+        </button>
+        <button class="ownedImage" id="5">
+          <img src="assets/images/Short.PNG" alt="ShortBuilding" />
+        </button>
+        <h3 id="ownedBuilding">
+        </h3>
+        <h3 id="ownerName">
+        </h3>
+        <div>
+          <button id="actionDestroy" onclick="actionDestroy()">
+            <h3>
+              Destroy
+            </h3>
+          </button>
+
+          <button onclick="closeModal()">
+            <h3>
+              Close
+            </h3>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- <script>
+    
+        function isMobile() {
+          let check = false;
+          (function (a) { if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) check = true; })(navigator.userAgent || navigator.vendor || window.opera);
+          return check;
+        };
+
+    function hover() {
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(raycastObjects, true);
+      if (intersects[0]) {
+        if (intersects[0].object.name == "AF" || intersects[0].object.name == "BF" || intersects[0].object.name == "CF") {
+          intersects[0].object.material.transparent = true
+          intersects[0].object.material.opacity = 0.5;
+        }
+        if (intersects[0].object.name == "Building") {
+          intersects[0].object.material.forEach(function (child) {
+            child.transparent = true
+            child.opacity = 0.5;
+          });
+        }
+      }
+    }
+
+    function resetMaterials() {
+      for (let i = 0; i < raycastObjects.length; i++) {
+        if (raycastObjects[i].material && (raycastObjects[i].name == "AF" || raycastObjects[i].name == "BF" || raycastObjects[i].name == "CF")) {
+          raycastObjects[i].material.opacity = 1;
+        }
+        if (raycastObjects[i] && raycastObjects[i].name == "Building") {
+          raycastObjects[i].children.forEach(function (child) {
+            // console.log(child.name)
+            child.material.forEach(function (material) {
+              material.opacity = 1;
+            });
+          })
+        }
+      }
+    }
+  </script> -->
+
+</body>
+
 </html>
