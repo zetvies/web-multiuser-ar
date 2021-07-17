@@ -120,7 +120,6 @@
 
         socket.on('remoteData', function (data) {
           remoteData = data;
-          console.log(remoteData)
         });
 
         socket.on('buildingState', function (data) {
@@ -130,7 +129,6 @@
         socket.on('userList', function (data) {
           userList = data
           createCharacters()
-          console.log(characterList)
         })
       });
 
@@ -219,7 +217,7 @@
           while (characters.children.length > 0) {
             characters.remove(characters.children[0]);
           }
-          characterList=[]
+          characterList = []
 
           let floader = new THREE.FBXLoader();
           let loader = new THREE.TextureLoader();
@@ -888,15 +886,21 @@
           buildingTemp = 5;
         }
       }
+      var startTime;
 
       function actionBuild() {
         resetButton()
-
+        startTime = Date.now()
         socket.emit('actionBuild', { land: landTemp, data: { vacant: false, building: buildingTemp, owner: username } })
         modal = false
         buildingTemp = null
       }
 
+      socket.on('pong', function () {
+        latency = Date.now() - startTime;
+        console.log(latency);
+      });
+      
       function actionDestroy() {
         resetButton()
 
@@ -1010,7 +1014,7 @@
         <div>
           <button id="actionBuild" onclick="actionBuild()">
             <h3>
-              Build
+              Order
             </h3>
           </button>
           <button onclick="closeModal()">
@@ -1046,7 +1050,7 @@
         <div>
           <button id="actionDestroy" onclick="actionDestroy()">
             <h3>
-              Destroy
+              Cancel Order
             </h3>
           </button>
 

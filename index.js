@@ -70,6 +70,7 @@ io.sockets.on("connection", function (socket) {
   socket.on("actionBuild", function (data) {
     buildingState[data.land] = data.data;
     io.emit("buildingState", buildingState);
+    socket.emit('pong');
   });
 
   socket.on("actionDestroy", function (data) {
