@@ -34,14 +34,14 @@
   Based on the AR.js library and examples created by Jerome Etienne: https://github.com/jeromeetienne/AR.js/
 -->
 
-<button onclick="openModal()" style="background-color: rgb(244, 241, 235, .7); height:70px; width:70px;border-radius: 4px;bottom:calc( 5% + 15px);left:5%; position:absolute;z-index: 10;">
+  <button onclick="openModal()" style="background-color: rgb(244, 241, 235, .7); height:70px; width:70px;border-radius: 4px;bottom:calc( 5% + 15px);left:5%; position:absolute;z-index: 10;">
 
-  <img id="selectedMotif" src="assets/brush/Beads-1.png"
-  style="height:60%;width:100%;" />
-  <div style="color:black; font-size: 12px; font-weight: 500;">
-    Pilih Pola
-  </div>
-</button>
+    <img id="selectedMotif" src="assets/brush/Beads-1.png"
+    style="height:60%;width:100%;" />
+    <div style="color:black; font-size: 12px; font-weight: 500;">
+      Pilih Pola
+    </div>
+  </button>
 
   <div id="joyDiv" onmousedown="joystickStart()" ontouchstart="joystickStart()"
     style="width:100px;height:100px;bottom:5%;left:50%;margin-left:-50px;position:absolute;z-index: 10;"></div>
@@ -209,6 +209,13 @@
           console.log(brushes)
         })
 
+        socket.on('resetCanvas', function (data) {
+          while (interactables.children.length > 0) {
+            interactables.remove(interactables.children[0]);
+          }
+          console.log("reset")
+        })
+
         socket.on('userList', function (data) {
           userList = data
           createCharacters()
@@ -282,17 +289,17 @@
         }
 
         if (isJoystickUsed) {
-          if (Player.object.position.x > 2.8/ 2) {
-            Player.object.position.x = 2.8 / 2
+          if (Player.object.position.x > 2.5/ 2) {
+            Player.object.position.x = 2.5 / 2
           }
-          if (Player.object.position.x < -2.8 / 2) {
-            Player.object.position.x = -2.8 / 2
+          if (Player.object.position.x < -2.5 / 2) {
+            Player.object.position.x = -2.5 / 2
           }
-          if (Player.object.position.z > 2.8 / 2) {
-            Player.object.position.z = 2.8 / 2
+          if (Player.object.position.z > 2.5 / 2) {
+            Player.object.position.z = 2.5 / 2
           }
-          if (Player.object.position.z < -2.8 / 2) {
-            Player.object.position.z = -2.8 / 2
+          if (Player.object.position.z < -2.5 / 2) {
+            Player.object.position.z = -2.5 / 2
           }
         }
 
@@ -409,6 +416,8 @@
         // build markerControls
         environment = new THREE.Group();
         scene.add(environment);
+        interactables = new THREE.Group();
+        scene.add(interactables);
         let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, environment, {
           type: 'pattern', patternUrl: "data/marker.patt"
         })
@@ -771,7 +780,7 @@
         floorMesh.position.z = item.z
         floorMesh.renderOrder=item.motif>6?index:100+index
         // floorMesh.receiveShadow = true;
-        environment.add(floorMesh);
+        interactables.add(floorMesh);
         console.log(index, parseFloat(`.1${index}`),floorMesh.position.x, floorMesh.position.z,floorMesh.position.y)
        })
       }

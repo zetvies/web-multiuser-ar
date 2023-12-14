@@ -84,6 +84,14 @@
           console.log("brushes",brushes)
         })
 
+        
+        socket.on('resetCanvas', function (data) {
+          while (interactables.children.length > 0) {
+            interactables.remove(interactables.children[0]);
+          }
+          console.log("reset")
+        })
+
         socket.on('userList', function (data) {
           userList = data
           createCharacters()
@@ -466,7 +474,7 @@
         floorMesh.position.y = -item.z
         floorMesh.renderOrder=item.motif>6?index:100+index
         // floorMesh.receiveShadow = true;
-        scene.add(floorMesh);
+        interactables.add(floorMesh);
         console.log(index, parseFloat(`.1${index}`),floorMesh.position.x, floorMesh.position.z,floorMesh.position.y)
        })
       }

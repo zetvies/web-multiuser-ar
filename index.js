@@ -17,6 +17,7 @@ server.listen(PORT, () => {
 });
 
 let userList = [];
+let history =[]
 let brushes=[]
 let buildingState = {
   A: {
@@ -81,6 +82,12 @@ io.sockets.on("connection", function (socket) {
 
   socket.on("actionAdd", function (data) {
     brushes.push(data);
+    if(brushes.length>20){
+      history.push(brushes)
+      // console.log(brushes.length, history)
+      brushes=[]
+      io.emit("resetCanvas", brushes);
+    }
     io.emit("brushesState", brushes);
   });
 
