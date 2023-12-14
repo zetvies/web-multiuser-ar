@@ -341,8 +341,6 @@
                     }
                   });
                 });
-                
-                object.translateY(2)
                 characters.add(object);
                 characterList.push({ id: user.id, object: object })
               });
@@ -355,7 +353,7 @@
         scene = new THREE.Scene();
 
         camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-        // camera.position.y=-2.5
+        camera.position.y=-2.5
         // camera.position.z=-5
         // camera.rotation.y=Math.PI/2
         scene.add(camera);
@@ -493,14 +491,12 @@
           floorMesh = new THREE.Mesh( geometry, material );
           
         floorMesh.rotation.x = -Math.PI / 2;
-        floorMesh.translateY(2)
           markerMesh = new THREE.Mesh( geometry2, material2 );
           
           markerMesh.renderOrder=1000
           
           markerMesh.rotation.x = -Math.PI / 2;
           markerMesh.position.z = 2.07
-        markerMesh.translateY(2)
           environment.add( floorMesh );
           environment.add( markerMesh );
 
@@ -797,7 +793,6 @@
         floorMesh.position.y = item.motif>6?.1+(index+1)*.01:.2+(index+1)*.015
         floorMesh.position.z = item.z
         floorMesh.renderOrder=item.motif>6?index:100+index
-        floorMesh.translateY(2)
         // floorMesh.receiveShadow = true;
         interactables.add(floorMesh);
         console.log(index, parseFloat(`.1${index}`),floorMesh.position.x, floorMesh.position.z,floorMesh.position.y)
