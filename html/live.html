@@ -208,11 +208,12 @@
           const material = new THREE.MeshBasicMaterial( { color: 0xffffff } ); 
           floorMesh = new THREE.Mesh( geometry, material );
 
-          const geometry2 = new THREE.CircleGeometry( .5, 64 );
-          const material2 = new THREE.MeshBasicMaterial( { color: 0x000000 } ); 
-          floorMesh = new THREE.Mesh( geometry, material );
-          markerMesh = new THREE.Mesh( geometry2, material2 );
-          markerMesh.position.y = -2.07
+          // const geometry2 = new THREE.CircleGeometry( .5, 64 );
+          // const material2 = new THREE.MeshBasicMaterial( { color: 0x000000 } ); 
+          // floorMesh = new THREE.Mesh( geometry, material );
+          // markerMesh = new THREE.Mesh( geometry2, material2 );
+          // markerMesh.position.y = -2.07
+
           scene.add( floorMesh );
           scene.add( markerMesh );
 
