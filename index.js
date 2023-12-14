@@ -17,6 +17,7 @@ server.listen(PORT, () => {
 });
 
 let userList = [];
+let brushes=[]
 let buildingState = {
   A: {
     vacant: true,
@@ -78,6 +79,11 @@ io.sockets.on("connection", function (socket) {
     io.emit("buildingState", buildingState);
   });
 
+  socket.on("actionAdd", function (data) {
+    brushes.push(data);
+    io.emit("brushesState", brushes);
+  });
+
   socket.on("init", function (data) {
     // console.log(`socket.init ${data.model}`);
     socket.model = data.model;
@@ -98,7 +104,7 @@ io.sockets.on("connection", function (socket) {
     userList.push(userInfo);
     io.emit("online", userList.length);
     io.emit("userList", userList);
-    socket.emit("buildingState", buildingState);
+    io.emit("brushesState", brushes);
   });
 
   socket.on("update", function (data) {
@@ -108,6 +114,13 @@ io.sockets.on("connection", function (socket) {
     socket.userData.heading = data.h;
     socket.userData.pb = data.pb;
   });
+
+
+  socket.on("initLive", function () {
+    io.emit("userList", userList);
+    io.emit("brushesState", brushes);
+  });
+
 
   socket.on("disconnect", function () {
     var removeIndex = userList.map((item) => item.id).indexOf(socket.id);

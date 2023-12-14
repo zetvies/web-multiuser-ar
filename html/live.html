@@ -2,9 +2,9 @@
 
 <head>
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>Saling Sulam</title>
+  <title>Live | Saling Sulam</title>
   <!-- include CSS -->
-  <link href="index.css" rel="stylesheet" type="text/css" />
+  <link href="live.css" rel="stylesheet" type="text/css" />
   <!-- include three.js library -->
   <script src='libs/three.min.js'></script>
   <!-- include jsartookit -->
@@ -34,26 +34,8 @@
   Based on the AR.js library and examples created by Jerome Etienne: https://github.com/jeromeetienne/AR.js/
 -->
 
-<button onclick="openModal()" style="background-color: rgb(244, 241, 235, .7); height:70px; width:70px;border-radius: 4px;bottom:calc( 5% + 15px);left:5%; position:absolute;z-index: 10;">
-
-  <img id="selectedMotif" src="assets/brush/Beads-1.png"
-  style="height:60%;width:100%;" />
-  <div style="color:black; font-size: 12px; font-weight: 500;">
-    Pilih Pola
-  </div>
-</button>
-
-  <div id="joyDiv" onmousedown="joystickStart()" ontouchstart="joystickStart()"
-    style="width:100px;height:100px;bottom:5%;left:50%;margin-left:-50px;position:absolute;z-index: 10;"></div>
-
-    <button onMouseOver="this.style.background='#E67C3A'" onMouseOut="this.style.background='#F68C4A'" onclick="actionAdd()" style="background-color: #F68C4A; height:80px; width:80px; border-radius: 50%;bottom:calc( 5% + 10px);right:5%; position:absolute;z-index: 10;">
-      <div style="font-weight: 900; color: white; font-family: 'Handlee', cursive; font-size: 20px;user-select: none;">
-        Sulam!
-      </div>
-    </button>
-
-  <div id="container">
-    <div id="home">
+  <!-- <div id="container"> -->
+    <!-- <div id="home">
       <img src="assets/brush/Beads-6.png"
         style="height:40vh;width:40vh; position: absolute; top:0;left:0; transform:translate(-10vh,-10vh)" />
       <img src="assets/brush/Beads-4.png"
@@ -65,104 +47,9 @@
         <h2>
           Silakan masukkan nama kamu.
         </h2>
-
-        <form class="nameForm" action="">
-          <input id="username" />
-          <button class="mainButton">
-            <h3>
-              Masuk
-            </h3>
-          </button>
-        </form>
-
-
-        <h3>
-          Terdapat <span id="onlineUser"></span> pengguna aktif.
-        </h3>
-      </div>
-
-    </div>
-    <div id="modal">
-      <div style="height: 200px; width: 200px; border-radius: 50%; display: flex; justify-content: center; align-items: center; background-color: #D9D9D9;">
-      
-        <img id="motifPreview" src="assets/brush/Beads-9.png"
-        style="height:60%;width:100%;" /></div>
-        <h2 style="font-size: 18px; margin-bottom:0">
-          Pilih motif yang kamu mau.
-        </h2>
-        <div style=" width: 256px; display: flex; flex-wrap: wrap; ">
-          <button id="1" onclick="selectButton(1)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-1.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="2" onclick="selectButton(2)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-2.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="3" onclick="selectButton(3)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-3.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="4" onclick="selectButton(4)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-4.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="5" onclick="selectButton(5)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-5.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="6" onclick="selectButton(6)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-6.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="7" onclick="selectButton(7)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-7.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="8" onclick="selectButton(8)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-8.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="9" onclick="selectButton(9)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-9.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="10" onclick="selectButton(10)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-
-            <img src="assets/brush/Beads-10.png"
-            style="height:60%;width:100%;" />
-          </button>
-          <button id="11"  onclick="selectButton(11)" style="background-color: rgb(244, 241, 235, .7); height:60px; width:60px; margin: 2px; border-radius: 4px;">
-            <img src="assets/brush/Beads-11.png"
-            style="height:60%;width:100%;" />
-          </button>
-        </div>
-        <div>
-          <h2 style="font-size: 18px; line-height: 18px; margin-bottom:0">
-            Pilih ukuran.
-          </h2>
-          <input id="sizeSlider" type="range"name="size" min="0" max="100" value="50" step="10" on />
-        </div>
-        <div style="margin-top: 8px;">
-          <button style="background: #a9a9a9; width: 90px; font-size: 14px; font-weight: 700; padding: 8px 16px;" onclick="closeModal()">
-            Batal
-          </button>
-          <button style="font-size: 14px;  width: 90px; font-weight: 700; padding: 8px 16px;" onclick="saveModal()">
-            Simpan
-          </button>
-        </div>
       </div>
     </div>
-  </div>
+  </div> -->
     <script>
       const socket = io();
       // let online;
@@ -173,6 +60,7 @@
       let remoteData
       let brushes =[]
 
+      var characters;
       
       // $('#home').hide()
 
@@ -183,35 +71,24 @@
           return null;
         });
 
-        socket.on('online', function (data) {
-          $('#onlineUser').text(data)
-        })
-        
-        // socket.on('buildingState', function (data) {
-        //   console.log(data)
-        // })
-
-        socket.on('acceptJoin', function (data) {
-          username = data.username;
-          id = data.id;
-          $('#home').hide()
-          initSocket()
-        })
-
         socket.on('remoteData', function (data) {
           remoteData = data;
+          
+          // console.log("remote",remoteData)
         });
 
         socket.on('brushesState', function (data) {
           brushes = data
           
           loadCanvas()
-          console.log(brushes)
+          console.log("brushes",brushes)
         })
 
         socket.on('userList', function (data) {
           userList = data
           createCharacters()
+          
+          console.log("users",userList)
         })
       });
 
@@ -249,18 +126,6 @@
       animate();
 
 
-      // Create JoyStick object into the DIV 'joyDiv'
-      var joy = new JoyStick('joyDiv');
-
-      let turn, forward, radius, rotation
-      function joystickStart() {
-        isJoystickUsed = true
-      }
-
-      function joystickStop() {
-        isJoystickUsed = false
-        Player.forward = 0
-      }
 
       function updateRemotePlayer() {
         if (remoteData) {
@@ -268,35 +133,12 @@
             let characterTemp = characterList.find(x => x.id === data.id)
             if (characterTemp) {
 
-              characterTemp.object.position.set(data.x, data.y, data.z);
+              characterTemp.object.position.set(data.x, -data.z, data.y);
               const euler = new THREE.Euler(data.pb, data.heading, data.pb);
               characterTemp.object.quaternion.setFromEuler(euler);
             }
           })
         }
-      }
-
-      function movePlayer(dt) {
-        if (Player.forward > 0.3) {
-          Player.object.translateZ(dt * 0.6);
-        }
-
-        if (isJoystickUsed) {
-          if (Player.object.position.x > 2.8/ 2) {
-            Player.object.position.x = 2.8 / 2
-          }
-          if (Player.object.position.x < -2.8 / 2) {
-            Player.object.position.x = -2.8 / 2
-          }
-          if (Player.object.position.z > 2.8 / 2) {
-            Player.object.position.z = 2.8 / 2
-          }
-          if (Player.object.position.z < -2.8 / 2) {
-            Player.object.position.z = -2.8 / 2
-          }
-        }
-
-        updateSocket()
       }
 
       function createCharacters() {
@@ -330,6 +172,7 @@
                     }
                   });
                 });
+
                 characters.add(object);
                 characterList.push({ id: user.id, object: object })
               });
@@ -339,154 +182,53 @@
       }
 
       function initialize() {
+        initSocket()
         scene = new THREE.Scene();
+          camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
-        camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-        // camera.rotation.y=Math.PI/2
-        scene.add(camera);
-
-        renderer = new THREE.WebGLRenderer({
-          antialias: true,
-          alpha: true
-        });
-        renderer.setClearColor(new THREE.Color('lightgrey'), 0)
-
+          renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true
+                  });
+          renderer.setSize( window.innerWidth, window.innerHeight );
+          renderer.domElement.style.backgroundColor = 'black'
+          
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.domElement.style.position = 'absolute'
-        renderer.domElement.style.top = '0px'
-        renderer.domElement.style.left = '0px'
-        document.body.appendChild(renderer.domElement);
+          document.body.appendChild( renderer.domElement );
 
+          const geometry = new THREE.CircleGeometry( 2, 64 );
+          const material = new THREE.MeshBasicMaterial( { color: 0xffffff } ); 
+          floorMesh = new THREE.Mesh( geometry, material );
+
+          const geometry2 = new THREE.CircleGeometry( .5, 64 );
+          const material2 = new THREE.MeshBasicMaterial( { color: 0x000000 } ); 
+          floorMesh = new THREE.Mesh( geometry, material );
+          markerMesh = new THREE.Mesh( geometry2, material2 );
+          markerMesh.position.y = -2.07
+          scene.add( floorMesh );
+          scene.add( markerMesh );
+
+          
+          camera.position.z = 5;
+
+          
+        characters = new THREE.Group();
+        scene.add(characters);
+          
         clock = new THREE.Clock();
         deltaTime = 0;
         totalTime = 0;
 
-        ////////////////////////////////////////////////////////////
-        // setup arToolkitSource
-        ////////////////////////////////////////////////////////////
-
-        arToolkitSource = new THREEx.ArToolkitSource({
-          sourceType: 'webcam',
-        });
-
-        function onResize() {
-          arToolkitSource.onResizeElement()
-          arToolkitSource.copyElementSizeTo(renderer.domElement)
-          if (arToolkitContext.arController !== null) {
-            arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
-          }
-        }
-
-        arToolkitSource.init(function onReady() {
-          onResize()
-        });
-
-        // handle resize event
-        window.addEventListener('resize', function () {
-          onResize()
-        });
-
-        ////////////////////////////////////////////////////////////
-        // setup arToolkitContext
-        ////////////////////////////////////////////////////////////	
-
-        // create atToolkitContext
-        arToolkitContext = new THREEx.ArToolkitContext({
-          cameraParametersUrl: 'data/camera_para.dat',
-          detectionMode: 'mono'
-        });
-
-        // copy projection matrix to camera when initialization complete
-        arToolkitContext.init(function onCompleted() {
-          camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
-        });
-
-        ////////////////////////////////////////////////////////////
-        // setup markerRoots
-        ////////////////////////////////////////////////////////////
-
-        // build markerControls
-        environment = new THREE.Group();
-        scene.add(environment);
-        let markerControls1 = new THREEx.ArMarkerControls(arToolkitContext, environment, {
-          type: 'pattern', patternUrl: "data/marker.patt"
-        })
-
-
-        let markerControls2 = new THREEx.ArMarkerControls(arToolkitContext, environment, {
-          type: 'pattern', patternUrl: "data/kanji.patt"
-        })
-        ////////////////////////////////////////////////////////////
-        // setup scene
-        ////////////////////////////////////////////////////////////
-
-        // joystick = new JoyStick({
-        //   onMove: playerControl
-        // });
-
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        interactables = new THREE.Group();
-        environment.add(interactables);
-        characters = new THREE.Group();
-        environment.add(characters);
-
-        let floader = new THREE.FBXLoader();
-        let loader = new THREE.TextureLoader();
-
-        const people = ['BeachBabe', 'BusinessMan', 'Doctor', 'FireFighter', 'Housewife', 'Policeman', 'Prostitute', 'Punk', 'RiotCop', 'Roadworker', 'Robber', 'Sheriff', 'Streetman', 'Waitress'];
-        model = people[Math.floor(Math.random() * people.length)];
-
-        floader.load(`assets/fbx/people/${model}.fbx`, function (object) {
-          object.scale.multiplyScalar(0.001)
-
-          object.name = id;
-
-          object.traverse(function (child) {
-            if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = false;
-            }
-          });
-
-          const name = model;//object.children[game.player.index].name.substring(3);
-          const colours = ['Black', 'Brown', 'White'];
-          colour = colours[Math.floor(Math.random() * colours.length)];
-
-          loader.load(`assets/images/SimplePeople_${name}_${colour}.png`, function (texture) {
-            object.traverse(function (child) {
-              if (child.isMesh) {
-                child.material.map = texture;
-              }
-            });
-          });
-
-          environment.add(object);
-          Player.object = object;
-          Player.object.position.y=.3
-        });
-
-
-        const geometry = new THREE.CircleGeometry( 2, 64 ); 
-        const material = new THREE.MeshBasicMaterial( { color: 0xffffff } ); 
-
-        floorMesh = new THREE.Mesh(geometry, material );
-        floorMesh.rotation.x = -Math.PI / 2;
-        // floorMesh.receiveShadow = true;
-        environment.add(floorMesh);
-
-
-        let light = new THREE.PointLight(0xffffff, 1, 50);
-        light.position.set(8, 8, 0); // default; light shining from top
+        let light = new THREE.PointLight(0xffffff, 2, 50);
+        light.position.set(8, 0, 8); // default; light shining from top
         light.castShadow = true;
-        environment.add(light);
+        scene.add(light);
 
         let ambientLight = new THREE.AmbientLight(0x666666);
-        environment.add(ambientLight);
+        scene.add(ambientLight);
+        scene.scale.multiplyScalar(1.5)
         // let helper = new THREE.CameraHelper( camera );
-        // environment.add( helper );
+        // scene.add( helper );
       }
 
       function onMouseMove(event) {
@@ -499,19 +241,8 @@
 
 
       function initSocket() {
-        //console.log("PlayerLocal.initSocket");
-        if (Player.object) {
-          socket.emit('init', {
-            username: username,
-            model: model,
-            colour: colour,
-            x: Player.object.position.x,
-            y: Player.object.position.y,
-            z: Player.object.position.z,
-            h: Player.object.rotation.y,
-            pb: Player.object.rotation.x,
-          });
-        }
+        socket.emit('initLive');
+        console.log("init")
       }
 
       function updateSocket() {
@@ -533,38 +264,6 @@
         window.removeEventListener("touchstart", funcref, false);
       }, false);
 
-      function update() {
-        // update artoolkit on every frame
-        if (arToolkitSource.ready !== false)
-          arToolkitContext.update(arToolkitSource.domElement);
-
-        if (isJoystickUsed) {
-          turn = joy.GetPosY() / 50 * (joy.GetPosX() - 50) / 25;
-          forward = joy.GetPosX() / 50 * (50 - joy.GetPosY()) / 25;
-
-          if (turn > 1) {
-            turn = 1
-          }
-          if (turn < -1) {
-            turn = -1
-          }
-          if (forward > 1) {
-            forward = 1
-          }
-          if (forward < -1) {
-            forward = -1
-          }
-          radius = Math.sqrt(Math.pow(forward, 2) + Math.pow(turn, 2));
-          Player.forward = radius
-
-          rotation = forward >= 0 && turn >= 0 ? turn * Math.PI / 2 : forward < 0 && turn >= 0 ? Math.PI - turn * Math.PI / 2 : forward < 0 && turn < 0 ? Math.PI - turn * Math.PI / 2 : forward >= 0 && turn < 0 ? Math.PI * 2 + turn * Math.PI / 2 : rotation
-          rotation = -rotation + Math.PI
-
-          Player.object.rotation.y = rotation
-
-          raycastObjects = []
-        }
-      }
 
       function render() {
         renderer.render(scene, camera);
@@ -685,8 +384,6 @@
           $('button#11').css({ "background":"rgb(0,0,0,0.1)" })
           motifTemp = 11;
         }
-        
-        $("#motifPreview").attr('src',  `assets/brush/Beads-${motif}.png`);
       }
       var startTime;
 
@@ -727,7 +424,6 @@
         sizeTemp=size
         motifTemp = motif
         $("#sizeSlider").val(size)
-        $("#motifPreview").css({"height":20+25*sizeTemp/100+"%","width":"100%"});
         modal = true
       }
 
@@ -751,7 +447,6 @@
         })
         $(document).on('input', '#sizeSlider', function() {
             sizeTemp = $(this).val();
-            $("#motifPreview").css({"height":20+25*sizeTemp/100+"%","width":"100%"});
         });
       }
 
@@ -761,17 +456,17 @@
         
         let loader = new THREE.TextureLoader();
       
-        const plane = new THREE.PlaneGeometry( 2*(parseInt(item.size)/100), 2*(parseInt(item.size)/100) ); 
+        const plane = new THREE.PlaneGeometry( 1.6*(parseInt(item.size)/100), 1.6*(parseInt(item.size)/100) ); 
         const image = new THREE.MeshBasicMaterial( {map: loader.load(`assets/brush/Beads-${item.motif}.png`), transparent: true,blending: THREE.NormalBlending, depthTest: true, depthWrite: false,} ); 
 
         floorMesh = new THREE.Mesh(plane, image );
-        floorMesh.rotation.x = -Math.PI / 2;
+        // floorMesh.rotation.x = -Math.PI / 2;
         floorMesh.position.x = item.x
-        floorMesh.position.y = item.motif>6?.1+(index+1)*.01:.2+(index+1)*.015
-        floorMesh.position.z = item.z
+        floorMesh.position.z = .2
+        floorMesh.position.y = -item.z
         floorMesh.renderOrder=item.motif>6?index:100+index
         // floorMesh.receiveShadow = true;
-        environment.add(floorMesh);
+        scene.add(floorMesh);
         console.log(index, parseFloat(`.1${index}`),floorMesh.position.x, floorMesh.position.z,floorMesh.position.y)
        })
       }
@@ -784,16 +479,16 @@
 
         requestAnimationFrame(animate);
 
-        loadHTML()
+        // loadHTML()
         // if (!isMobile()) {
         //   resetMaterials();
         //   hover();
         // }
-        update();
+        // update();
 
         //navigation
         updateRemotePlayer(deltaTime)
-        movePlayer(deltaTime)
+        // movePlayer(deltaTime)
         render();
       }
     </script>
