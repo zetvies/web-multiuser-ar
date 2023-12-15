@@ -86,7 +86,7 @@ io.sockets.on("connection", function (socket) {
       history.push(brushes)
       // console.log(brushes.length, history)
       brushes=[]
-      io.emit("resetCanvas", brushes);
+      io.emit("resetCanvas", history);
     }
     io.emit("brushesState", brushes);
   });
