@@ -79,6 +79,14 @@
         <h3>
           Terdapat <span id="onlineUser"></span> pengguna aktif.
         </h3>
+        <a href="./gallery.html">
+
+          <button style="padding:8px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; margin-top: 1vh;">
+           
+            <img src="assets/images/gallery.png"
+            style="height:36px;width:36px; margin-right: 4px;" /> Lihat Galeri
+          </button>
+        </a>
       </div>
 
     </div>
@@ -179,7 +187,10 @@
       $(function () {
         $('form').submit((e) => {
           e.preventDefault();//prevents page reloading
-          socket.emit("requestJoin", $('#username').val());
+          if($('#username').val()){
+            socket.emit("requestJoin", $('#username').val());
+          }
+          console.log($('#username').val())
           return null;
         });
 
@@ -749,7 +760,7 @@
         sizeTemp=size
         motifTemp = motif
         $("#sizeSlider").val(size)
-        $("#motifPreview").css({"height":20+25*sizeTemp/100+"%","width":"100%"});
+        $("#motifPreview").css({"height":15+15*sizeTemp/100+"%","width":"100%"});
         modal = true
       }
 
@@ -773,7 +784,7 @@
         })
         $(document).on('input', '#sizeSlider', function() {
             sizeTemp = $(this).val();
-            $("#motifPreview").css({"height":20+25*sizeTemp/100+"%","width":"100%"});
+            $("#motifPreview").css({"height":15+15*sizeTemp/100+"%","width":"100%"});
         });
       }
 

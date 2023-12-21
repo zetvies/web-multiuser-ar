@@ -2,7 +2,7 @@
 
 <head>
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <title>Live | Saling Sulam</title>
+  <title>Galeri | Saling Sulam</title>
   <!-- include CSS -->
   <link href="live.css" rel="stylesheet" type="text/css" />
   <!-- include three.js library -->
@@ -27,7 +27,7 @@
   <script src="libs/jquery-3.6.0.min.js"></script>
 </head>
 
-<body style='margin : 0px; overflow: hidden; background-color: black;'>
+<body style='margin : 0px; overflow: hidden; background-color: #F4F1EB; '>
 
   <!-- 
   Example created by Lee Stemkoski: https://github.com/stemkoski
@@ -35,21 +35,34 @@
 -->
 
   <!-- <div id="container"> -->
-    <!-- <div id="home">
-      <img src="assets/brush/Beads-6.png"
-        style="height:40vh;width:40vh; position: absolute; top:0;left:0; transform:translate(-10vh,-10vh)" />
-      <img src="assets/brush/Beads-4.png"
-        style="height:30vh;width:30vh; position: absolute; top:0;right:0; transform:translate(10vh,3vh)" />
-      <div class="formContainer">
-        <h1>
-          Saling Sulam
+      <div style="position: absolute; top:7vh; left:0; right:0; margin:auto; text-align: center;">
+        <h1 style="margin-bottom: 1vh; font-size: 5vh;">
+          Sulaman #<span id="sulamanId">1</span>
         </h1>
-        <h2>
-          Silakan masukkan nama kamu.
-        </h2>
+        <div style="font-size: 2.4vh;margin-bottom: 1.5vh;">
+          Dibuat pada <span id="sulamanDate">21/12/2023</span>
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <button id="prevButton" onclick="prev()" style="height: 5vh; width:5vh; background-color: #a0a0a0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: .5vh;">
+            
+            <img src="assets/images/Arrow_1.png"
+            style="height:2.5vh;width:2.5vh; transform: rotate(180deg);" />
+          </button>
+          <button id="nextButton" onclick="next()" style="height: 5vh; width:5vh; background-color: #5a9590; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: .5vh;">
+            
+            <img src="assets/images/Arrow_1.png"
+            style="height:2.5vh;width:2.5vh;" />
+          </button>
+        </div>
       </div>
-    </div>
-  </div> -->
+      
+      <div style="position: absolute; bottom:18vh; left:0; right:0; margin:auto; text-align: center; max-width: 80vw;">
+        <div>
+          Kolaborator:
+        </div>
+        <div id="collaborator" style="font-weight: 600;">
+        </div>
+      </div>
     <script>
       const socket = io();
       // let online;
@@ -58,10 +71,56 @@
       let userList = []
       let characterList = []
       let remoteData
+      let history =[]
       let brushes =[]
+      let collaborator =[]
+      let view=0
 
       var characters;
+
       
+      function next(){
+        if(view>0){
+          view=view-1;
+          brushes=history[view].data
+          
+          loadCanvas()
+          $("#sulamanId").text(view+1)
+          $("#sulamanDate").text(history[view].date)
+          $("#prevButton").css("background-color","#5a9590")
+          $("#nextButton").css("background-color","#5a9590")
+          if(view===0){
+            $("#nextButton").css("background-color","#a0a0a0")
+          }
+          collaborator=brushes.map(item => item.username).filter((value, index, self) => self.indexOf(value) === index)
+          $('#collaborator').append(
+            $.map(collaborator, function(name, index) {
+                return $('<span>').text(`${name}${index!==collaborator.length-1?", ":""}`);
+            })
+          );
+        }
+      }
+      
+      function prev(){
+        if(view<history.length-1){
+          view=view+1;
+          brushes=history[view].data
+          loadCanvas()
+          $("#sulamanId").text(view+1)
+          $("#sulamanDate").text(history[view].date)
+          $("#prevButton").css("background-color","#5a9590")
+          $("#nextButton").css("background-color","#5a9590")
+          if(view===history.length-1){
+            $("#prevButton").css("background-color","#a0a0a0")
+          }
+          collaborator=brushes.map(item => item.username).filter((value, index, self) => self.indexOf(value) === index)
+          $('#collaborator').append(
+            $.map(collaborator, function(name, index) {
+                return $('<span>').text(`${name}${index!==collaborator.length-1?", ":""}`);
+            })
+          );
+        }
+      }
       // $('#home').hide()
 
       $(function () {
@@ -77,11 +136,24 @@
           // console.log("remote",remoteData)
         });
 
-        socket.on('brushesState', function (data) {
-          brushes = data
-          
+
+        socket.on('history', function (data) {
+          history=data
+          view=history.length>0?history.length-1:null
+          brushes = history.length>0?history[view].data:[]
+          collaborator=brushes.map(item => item.username).filter((value, index, self) => self.indexOf(value) === index)
+          // console.log(collaborator)
+
           loadCanvas()
-          console.log("brushes",brushes)
+          console.log("history",data)
+          $("#sulamanId").text(view+1)
+          $("#sulamanDate").text(history[view].date)
+          $('#collaborator').append(
+            $.map(collaborator, function(name, index) {
+                return $('<span>').text(`${name}${index!==collaborator.length-1?", ":""}`);
+            })
+          );
+          
         })
 
         
@@ -89,15 +161,15 @@
           while (interactables.children.length > 0) {
             interactables.remove(interactables.children[0]);
           }
-          console.log(data)
+          // console.log(data)
         })
 
-        socket.on('userList', function (data) {
-          userList = data
-          createCharacters()
+        // socket.on('userList', function (data) {
+        //   userList = data
+        //   createCharacters()
           
-          console.log("users",userList)
-        })
+        //   console.log("users",userList)
+        // })
       });
 
       var scene, camera, renderer, clock, deltaTime, totalTime;
@@ -192,13 +264,14 @@
       function initialize() {
         initSocket()
         scene = new THREE.Scene();
-          camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 0.1, 1000 );
+          camera = new THREE.PerspectiveCamera( 130, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
           renderer = new THREE.WebGLRenderer({
                     antialias: true,
                     alpha: true
                   });
           renderer.setSize( window.innerWidth, window.innerHeight );
+          // renderer.domElement.style.backgroundColor = '#F4F1EB'
           
         renderer.setPixelRatio(window.devicePixelRatio);
           document.body.appendChild( renderer.domElement );
@@ -250,8 +323,13 @@
       }
 
 
+      // function initSocket() {
+      //   socket.emit('initLive');
+      //   console.log("init")
+      // }
+
       function initSocket() {
-        socket.emit('initLive');
+        socket.emit('initGallery');
         console.log("init")
       }
 
@@ -330,82 +408,6 @@
       }
 
 
-      function resetButton() {
-        $('button#1').css({ "background":"transparent" })
-        $('button#2').css({ "background":"transparent" })
-        $('button#3').css({ "background":"transparent" })
-        $('button#4').css({ "background":"transparent" })
-        $('button#5').css({ "background":"transparent" })
-        $('button#6').css({ "background":"transparent" })
-        $('button#7').css({ "background":"transparent" })
-        $('button#8').css({ "background":"transparent" })
-        $('button#9').css({ "background":"transparent" })
-        $('button#10').css({ "background":"transparent" })
-        $('button#11').css({ "background":"transparent" })
-      }
-
-      
-
-      //HTML Side
-      function selectButton(motif) {
-        resetButton()
-
-        if (motif == 1) {
-          $('button#1').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 1;
-        }
-        if (motif == 2) {
-          $('button#2').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 2;
-        }
-        if (motif == 3) {
-          $('button#3').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 3;
-        }
-        if (motif == 4) {
-          $('button#4').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 4;
-        }
-        if (motif == 5) {
-          $('button#5').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 5;
-        }
-        if (motif == 6) {
-          $('button#6').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 6;
-        }
-        if (motif == 7) {
-          $('button#7').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 7;
-        }
-        if (motif == 8) {
-          $('button#8').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 8;
-        }
-        if (motif == 9) {
-          $('button#9').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 9;
-        }
-        if (motif == 10) {
-          $('button#10').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 10;
-        }
-        if (motif == 11) {
-          $('button#11').css({ "background":"rgb(0,0,0,0.1)" })
-          motifTemp = 11;
-        }
-      }
-      var startTime;
-
-      function actionAdd() {        
-        if (socket !== undefined && Player.object) {
-          socket.emit('actionAdd', { username:username, motif:motif, size:size, x:Player.object.position.x, z:Player.object.position.z, timeStamp:Date.now() })
-          modal = false
-          motifTemp = null
-          // console.log("add client",{ motif:motif, size:size, x:Player.object.position.x, z:Player.object.position.z, timeStamp:Date.now() })
-        }
-      }
-
 
       // function actionBuild() {
       //   resetButton()
@@ -429,44 +431,19 @@
       //   motifTemp = null
       // }
 
-      function openModal() {
-        selectButton(motif)
-        sizeTemp=size
-        motifTemp = motif
-        $("#sizeSlider").val(size)
-        modal = true
-      }
-
-      function closeModal() {
-        modal = false
-        motifTemp = null
-      }
-
-      function saveModal() {
-        size=sizeTemp
-        motif=motifTemp
-        motifTemp = null
-        $("#selectedMotif").attr('src',  `assets/brush/Beads-${motif}.png`);
-        modal = false
-      }
-
-      function loadHTML(size) {
-        $(function () {
-          $("#modal").toggle(modal)
-          const input = document.querySelector("#pi_input");
-        })
-        $(document).on('input', '#sizeSlider', function() {
-            sizeTemp = $(this).val();
-        });
-      }
 
       function loadCanvas() {
-        console.log(brushes)
+        
+        $('#collaborator').empty()
+        while (interactables.children.length > 0) {
+            interactables.remove(interactables.children[0]);
+          }
+
        brushes.map((item,index)=>{
         
         let loader = new THREE.TextureLoader();
       
-        const plane = new THREE.PlaneGeometry(  0.6+.8*(parseInt(item.size)/100), 0.6+.8*(parseInt(item.size)/100)  ); 
+        const plane = new THREE.PlaneGeometry( 0.6+.8*(parseInt(item.size)/100), 0.6+.8*(parseInt(item.size)/100) ); 
         const image = new THREE.MeshBasicMaterial( {map: loader.load(`assets/brush/Beads-${item.motif}.png`), transparent: true,blending: THREE.NormalBlending, depthTest: true, depthWrite: false,} ); 
 
         floorMesh = new THREE.Mesh(plane, image );
